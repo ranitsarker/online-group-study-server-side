@@ -34,6 +34,7 @@ async function run() {
 
       try {
           const result = await assignmentCollection.insertOne({
+
               title,
               description,
               marks,
@@ -51,14 +52,31 @@ async function run() {
           return res.status(500).json({ message: 'Internal server error' });
       }
     });
+    
     // to get all assignment
     app.get('/all-assignment', async(req, res) => {
       const cursor = assignmentCollection.find();
       const result = await cursor.toArray();
       res.send(result);
-  })
-
-
+    })
+    
+    app.get('/assignment/:id', async (req, res) => {
+      const assignmentId = req.params.id;
+    
+      try {
+        const assignment = await assignmentCollection.findOne({ _id: new ObjectId(assignmentId) });
+    
+        if (assignment) {
+          return res.status(200).json(assignment);
+        } else {
+          return res.status(404).json({ message: 'Assignment not found' });
+        }
+      } catch (error) {
+        console.error('Error getting assignment by ID:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+    
 
 
 
