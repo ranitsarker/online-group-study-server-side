@@ -59,7 +59,7 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     })
-    
+    // single assignment
     app.get('/assignment/:id', async (req, res) => {
       const assignmentId = req.params.id;
     
@@ -77,7 +77,33 @@ async function run() {
       }
     });
     
+    // update assignment get
+    app.get('/update-assignment/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id)}
+      const assignment = await assignmentCollection.findOne(query)
+      res.send(assignment);
+    })
 
+// update assignment put 
+app.put('/update-assignment/:id', async (req, res) => {
+  const id = req.params.id;
+  const updatingAssignment = req.body;
+  const filter = { _id: new ObjectId(id) };
+  const options = { upsert: true };
+  const updateAssignment = {
+    $set: {
+      title: updatingAssignment.title,
+      description: updatingAssignment.description,
+      marks: updatingAssignment.marks,
+      difficulty: updatingAssignment.difficulty,
+      thumbnailUrl: updatingAssignment.thumbnailUrl,
+      createdBy: updatingAssignment.createdBy,
+    }
+  };
+  const result = await assignmentCollection.updateOne(filter, updateAssignment, options);
+  res.send(result);
+});
 
 
     await client.db("admin").command({ ping: 1 });
