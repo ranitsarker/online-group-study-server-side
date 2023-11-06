@@ -230,7 +230,17 @@ async function run() {
       }
     });
 
-
+    // Add this server endpoint to get completed assignments
+    app.get('/completed-assignments', async (req, res) => {
+      try {
+        const completedAssignments = await completedAssignment.find({}).toArray();
+        res.status(200).json(completedAssignments);
+      } catch (error) {
+        console.error('Error fetching completed assignments:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
