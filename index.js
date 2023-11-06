@@ -107,35 +107,48 @@ async function run() {
     });
     
     // Endpoint to handle assignment submission
-    app.post('/submit-assignment', async (req, res) => {
-      const { pdfLink, quickNote, userEmail } = req.body;
-
+    app.post('/assignment-submission', async (req, res) => {
+      const { pdfLink, quickNote, userEmail, assignmentTitle, assignmentMarks } = req.body;
+    
       // Ensure that pdfLink, quickNote, and userEmail are provided
       if (!pdfLink || !quickNote || !userEmail) {
-          return res.status(400).json({ message: 'All fields are required' });
+        return res.status(400).json({ message: 'All fields are required' });
       }
-
+    
       // Create a new assignment submission object
       const submission = {
-          pdfLink,
-          quickNote,
-          userEmail,
-          status: 'pending', // initial status here
+        pdfLink,
+        quickNote,
+        userEmail,
+        assignmentTitle,
+        assignmentMarks,
+        status: 'pending',
       };
-
+    
       try {
-          const result = await submittedAssignment.insertOne(submission);
-          if (result.insertedId) {
-              return res.status(201).json({ message: 'Assignment submitted successfully' });
-          } else {
-              return res.status(500).json({ message: 'Failed to insert assignment submission' });
-          }
+        const result = await submittedAssignment.insertOne(submission);
+        if (result.insertedId) {
+          return res.status(201).json({ message: 'Assignment submitted successfully' });
+        } else {
+          return res.status(500).json({ message: 'Failed to insert assignment submission' });
+        }
       } catch (error) {
-          console.error('Error submitting assignment:', error);
-          return res.status(500).json({ message: 'Internal server error' });
+        console.error('Error submitting assignment:', error);
+        return res.status(500).json({ message: 'Internal server error' });
       }
     });
     
+    // Endpoint to get the list of submitted assignments
+    app.get('/submitted-assignment', async (req, res) => {
+      try {
+        const submittedAssignments = await submittedAssignment.find().toArray();
+        res.status(200).json(submittedAssignments);
+      } catch (error) {
+        console.error('Error fetching submitted assignments:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
