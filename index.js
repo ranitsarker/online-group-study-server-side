@@ -24,6 +24,7 @@ async function run() {
     await client.connect();
     const assignmentCollection = client.db('onlineGroupStudyDB').collection('assignments');
     const submittedAssignment = client.db('onlineGroupStudyDB').collection('submitted');
+    const completedAssignment = client.db('onlineGroupStudyDB').collection('completed');
 
     // Create a new endpoint for creating assignments
     app.post('/create-assignment', async (req, res) => {
@@ -155,7 +156,7 @@ async function run() {
       }
     });
     
-    // Define a server endpoint to get assignment details by assignmentId
+    // endpoint to get assignment details by assignmentId
     app.get('/give-mark/:assignmentId', async (req, res) => {
       const assignmentId = req.params.assignmentId;
 
@@ -176,6 +177,70 @@ async function run() {
       } catch (error) {
         console.error('Error fetching assignment details:', error);
         res.status(500).json({ message: 'Internal server error', error: error.message });
+      }
+    });
+
+    // Add this server endpoint to handle assignment completion
+    app.post('/complete-assignment', async (req, res) => {
+      const { assignmentTitle, userEmail, marks, feedback, status } = req.body;
+
+      try {
+        // Insert the completed assignment into the 'completed' collection
+        const result = await completedAssignment.insertOne({
+          assignmentTitle,
+          userEmail,
+          marks,
+          feedback,
+          status,
+        });
+
+        if (result.insertedId) {
+          // Successfully inserted into 'completed' collection
+          // You may now remove the assignment from the 'submitted' collection
+          // Your code to remove it from 'submitted' collection goes here
+
+          res.status(201).json({ message: 'Assignment completed successfully' });
+        } else {
+          res.status(500).json({ message: 'Failed to insert completed assignment' });
+        }
+      } catch (error) {
+        console.error('Error completing assignment:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+
+    // Add this server endpoint to handle deleting a submitted assignment by assignmentId
+    app.delete('/remove-submitted-assignment/:assignmentId', async (req, res) => {
+      const assignmentId = req.params.assignmentId;
+
+      try {
+        // Use the ObjectId constructor to convert the assignmentId to an ObjectId
+        const assignmentObjectId = new ObjectId(assignmentId);
+
+        // Use the `deleteOne` method to delete the assignment with the given assignmentId
+        const result = await submittedAssignment.deleteOne({ _id: assignmentObjectId });
+
+        if (result.deletedCount === 1) {
+          // Assignment successfully deleted
+          res.status(200).json({ message: 'Assignment removed from submitted collection' });
+        } else {
+          // Assignment not found or failed to delete
+          res.status(404).json({ message: 'Assignment not found or failed to delete' });
+        }
+      } catch (error) {
+        console.error('Error deleting submitted assignment:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+
+    // Add this server endpoint to get completed assignments
+    app.get('/completed-assignments', async (req, res) => {
+      try {
+        const completedAssignments = await completedAssignment.find({}).toArray();
+        res.status(200).json(completedAssignments);
+      } catch (error) {
+        console.error('Error fetching completed assignments:', error);
+        res.status(500).json({ message: 'Internal server error' });
       }
     });
 
