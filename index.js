@@ -137,17 +137,24 @@ async function run() {
         return res.status(500).json({ message: 'Internal server error' });
       }
     });
+
+    // submitted assignment get endpoint use by use with status
     
-    // Endpoint to get the list of submitted assignments
-    app.get('/submitted-assignment', async (req, res) => {
+    app.get('/submitted-assignment/:userEmail', async (req, res) => {
+      const userEmail = req.params.userEmail;
+    
       try {
-        const submittedAssignments = await submittedAssignment.find().toArray();
+        const submittedAssignments = await submittedAssignment
+          .find({ userEmail, status: 'pending' }) // Filter by user email and pending status
+          .toArray();
+    
         res.status(200).json(submittedAssignments);
       } catch (error) {
-        console.error('Error fetching submitted assignments:', error);
+        console.error('Error fetching pending submitted assignments:', error);
         res.status(500).json({ message: 'Internal server error' });
       }
     });
+    
 
 
     await client.db("admin").command({ ping: 1 });
