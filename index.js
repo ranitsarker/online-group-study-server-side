@@ -155,6 +155,29 @@ async function run() {
       }
     });
     
+    // Define a server endpoint to get assignment details by assignmentId
+    app.get('/give-mark/:assignmentId', async (req, res) => {
+      const assignmentId = req.params.assignmentId;
+
+      console.log('Assignment ID:', assignmentId); // Log the assignment ID
+
+      try {
+        // Use the ObjectId constructor to convert the assignmentId to an ObjectId
+        const assignmentObjectId = new ObjectId(assignmentId);
+
+        // Query the MongoDB collection for assignment details
+        const assignmentDetails = await submittedAssignment.findOne({ _id: assignmentObjectId });
+
+        if (assignmentDetails) {
+          res.status(200).json(assignmentDetails);
+        } else {
+          res.status(404).json({ message: 'Assignment not found' });
+        }
+      } catch (error) {
+        console.error('Error fetching assignment details:', error);
+        res.status(500).json({ message: 'Internal server error', error: error.message });
+      }
+    });
 
 
     await client.db("admin").command({ ping: 1 });
