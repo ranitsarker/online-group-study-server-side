@@ -23,6 +23,7 @@ async function run() {
   try {
     await client.connect();
     const assignmentCollection = client.db('onlineGroupStudyDB').collection('assignments');
+    const submittedAssignment = client.db('onlineGroupStudyDB').collection('submitted');
 
     // Create a new endpoint for creating assignments
     app.post('/create-assignment', async (req, res) => {
@@ -85,26 +86,56 @@ async function run() {
       res.send(assignment);
     })
 
-// update assignment put 
-app.put('/update-assignment/:id', async (req, res) => {
-  const id = req.params.id;
-  const updatingAssignment = req.body;
-  const filter = { _id: new ObjectId(id) };
-  const options = { upsert: true };
-  const updateAssignment = {
-    $set: {
-      title: updatingAssignment.title,
-      description: updatingAssignment.description,
-      marks: updatingAssignment.marks,
-      difficulty: updatingAssignment.difficulty,
-      thumbnailUrl: updatingAssignment.thumbnailUrl,
-      createdBy: updatingAssignment.createdBy,
-    }
-  };
-  const result = await assignmentCollection.updateOne(filter, updateAssignment, options);
-  res.send(result);
-});
+    // update assignment put 
+    app.put('/update-assignment/:id', async (req, res) => {
+      const id = req.params.id;
+      const updatingAssignment = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateAssignment = {
+        $set: {
+          title: updatingAssignment.title,
+          description: updatingAssignment.description,
+          marks: updatingAssignment.marks,
+          difficulty: updatingAssignment.difficulty,
+          thumbnailUrl: updatingAssignment.thumbnailUrl,
+          createdBy: updatingAssignment.createdBy,
+        }
+      };
+      const result = await assignmentCollection.updateOne(filter, updateAssignment, options);
+      res.send(result);
+    });
+    
+    // Endpoint to handle assignment submission
+    app.post('/submit-assignment', async (req, res) => {
+      const { pdfLink, quickNote, userEmail } = req.body;
 
+      // Ensure that pdfLink, quickNote, and userEmail are provided
+      if (!pdfLink || !quickNote || !userEmail) {
+          return res.status(400).json({ message: 'All fields are required' });
+      }
+
+      // Create a new assignment submission object
+      const submission = {
+          pdfLink,
+          quickNote,
+          userEmail,
+          status: 'pending', // initial status here
+      };
+
+      try {
+          const result = await submittedAssignment.insertOne(submission);
+          if (result.insertedId) {
+              return res.status(201).json({ message: 'Assignment submitted successfully' });
+          } else {
+              return res.status(500).json({ message: 'Failed to insert assignment submission' });
+          }
+      } catch (error) {
+          console.error('Error submitting assignment:', error);
+          return res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+    
 
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
