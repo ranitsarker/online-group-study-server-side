@@ -55,29 +55,18 @@ async function run() {
       }
     });
     
-    // to get all assignment
-    app.get('/all-assignment', async(req, res) => {
-      const cursor = assignmentCollection.find();
+    // to get all assignment endpoint and accept a difficulty query parameter
+
+    app.get('/all-assignment', async (req, res) => {
+      const difficulty = req.query.difficulty || 'all'; 
+
+      // Filter assignments based on the selected difficulty or fetch all assignments
+      const cursor = difficulty === 'all' ? assignmentCollection.find() : assignmentCollection.find({ difficulty });
       const result = await cursor.toArray();
+
       res.send(result);
-    })
-    // single assignment
-    app.get('/assignment/:id', async (req, res) => {
-      const assignmentId = req.params.id;
-    
-      try {
-        const assignment = await assignmentCollection.findOne({ _id: new ObjectId(assignmentId) });
-    
-        if (assignment) {
-          return res.status(200).json(assignment);
-        } else {
-          return res.status(404).json({ message: 'Assignment not found' });
-        }
-      } catch (error) {
-        console.error('Error getting assignment by ID:', error);
-        return res.status(500).json({ message: 'Internal server error' });
-      }
     });
+
     
     // update assignment get
     app.get('/update-assignment/:id', async(req, res) => {
@@ -230,7 +219,7 @@ async function run() {
       }
     });
 
-    // Add this server endpoint to get completed assignments for a specific user
+    // endpoint to get completed assignments for a specific user
     app.get('/completed-assignments/:userEmail', async (req, res) => {
       const userEmail = req.params.userEmail;
 
@@ -242,6 +231,22 @@ async function run() {
         res.status(500).json({ message: 'Internal server error' });
       }
     });
+    // completed assignment delete endpoint
+    app.delete('/delete-assignment/:assignmentId', async (req, res) => {
+      const assignmentId = req.params.assignmentId;
+
+      try {
+        // Remove the assignment from your database
+        await completedAssignment.deleteOne({ _id: new ObjectId(assignmentId) });
+        
+        res.status(204).send('Completed assignment deleted successfully');
+      } catch (error) {
+        console.error('Error deleting assignment:', error);
+        res.status(500).send('Failed to delete the assignment');
+      }
+    });
+
+    
 
     
     await client.db("admin").command({ ping: 1 });
