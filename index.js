@@ -67,7 +67,47 @@ async function run() {
       res.send(result);
     });
 
+    // single assignment
+    app.get('/assignment/:id', async (req, res) => {
+      const assignmentId = req.params.id;
     
+      try {
+        const assignment = await assignmentCollection.findOne({ _id: new ObjectId(assignmentId) });
+    
+        if (assignment) {
+          return res.status(200).json(assignment);
+        } else {
+          return res.status(404).json({ message: 'Assignment not found' });
+        }
+      } catch (error) {
+        console.error('Error getting assignment by ID:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+    // delete assignment end point
+    app.delete('/assignments/:id', async (req, res) => {
+      const assignmentId = req.params.id;
+
+      try {
+        // Use the ObjectId constructor to convert the assignmentId to an ObjectId
+        const assignmentObjectId = new ObjectId(assignmentId);
+
+        // Use the `deleteOne` method to delete the assignment from the 'assignments' collection
+        const result = await assignmentCollection.deleteOne({ _id: assignmentObjectId });
+
+        if (result.deletedCount === 1) {
+          // Assignment successfully deleted
+          return res.status(200).json({ message: 'Assignment deleted successfully' });
+        } else {
+          // Assignment not found or failed to delete
+          return res.status(404).json({ message: 'Assignment not found or failed to delete' });
+        }
+      } catch (error) {
+        console.error('Error deleting assignment:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    });
+
     // update assignment get
     app.get('/update-assignment/:id', async(req, res) => {
       const id = req.params.id;
@@ -219,7 +259,7 @@ async function run() {
       }
     });
 
-    // endpoint to get completed assignments for a specific user
+    // Add this server endpoint to get completed assignments for a specific user
     app.get('/completed-assignments/:userEmail', async (req, res) => {
       const userEmail = req.params.userEmail;
 
@@ -231,24 +271,9 @@ async function run() {
         res.status(500).json({ message: 'Internal server error' });
       }
     });
-    // completed assignment delete endpoint
-    app.delete('/delete-assignment/:assignmentId', async (req, res) => {
-      const assignmentId = req.params.assignmentId;
 
-      try {
-        // Remove the assignment from your database
-        await completedAssignment.deleteOne({ _id: new ObjectId(assignmentId) });
-        
-        res.status(204).send('Completed assignment deleted successfully');
-      } catch (error) {
-        console.error('Error deleting assignment:', error);
-        res.status(500).send('Failed to delete the assignment');
-      }
-    });
 
-    
-
-    
+  
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
