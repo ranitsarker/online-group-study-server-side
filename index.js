@@ -117,7 +117,7 @@ async function run() {
     });
 
     // single assignment
-    app.get('/assignment/:id', async (req, res) => {
+    app.get('/assignment/:id', verifyToken, async (req, res) => {
       const assignmentId = req.params.id;
     
       try {
