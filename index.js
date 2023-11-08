@@ -241,17 +241,15 @@ async function run() {
     });
     
     // endpoint to get assignment details by assignmentId
-    app.get('/give-mark/:assignmentId', async (req, res) => {
+    app.get('/give-mark/:assignmentId', verifyToken, async (req, res) => {
       const assignmentId = req.params.assignmentId;
-
-      // console.log('Assignment ID:', assignmentId); // Log the assignment ID
-
+      const userEmail = req.user.email;
       try {
         // Use the ObjectId constructor to convert the assignmentId to an ObjectId
         const assignmentObjectId = new ObjectId(assignmentId);
 
         // Query the MongoDB collection for assignment details
-        const assignmentDetails = await submittedAssignment.findOne({ _id: assignmentObjectId });
+        const assignmentDetails = await submittedAssignment.findOne({ _id: assignmentObjectId, userEmail});
 
         if (assignmentDetails) {
           res.status(200).json(assignmentDetails);
