@@ -317,9 +317,10 @@ async function run() {
     // Add this server endpoint to get completed assignments for a specific user
     app.get('/completed-assignments/:userEmail', verifyToken, async (req, res) => {
       const userEmail = req.params.userEmail;
-
-      if (req.user.email !== userEmail) {
-        return res.status(403).send({ message: 'Forbidden access' });
+	  console.log('user email:', userEmail);
+	  console.log('token owner info:', req.user);
+     if(req.user.email !== userEmail){
+        return res.status(403).send({message: 'Access Denied'})
       }
       try {
         const userCompletedAssignments = await completedAssignment.find({ userEmail }).toArray();
