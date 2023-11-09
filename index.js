@@ -62,21 +62,23 @@ async function run() {
       const user = req.body;
       console.log('user for token:', user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
-      res.cookie('token', token,{
+      .cookie('token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'none'
-      })
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    })
       .send({success: true})
     })
 
-    //user logout
-    app.post('/logout', async(req, res) => {
-      const user = req.body;
-      console.log('logged out user:', user)
-      res.clearCookie('token', {maxAge: 0}).send({success: true})
-    })
 
+    //user logout
+    app.post('/logout', async (req, res) => {
+      const user = req.body;
+      console.log('logging out', user);
+      res
+          .clearCookie('token', { maxAge: 0, sameSite: 'none', secure: true })
+          .send({ success: true })
+   })
 
     // Create a new endpoint for creating assignments
     app.post('/create-assignment', async (req, res) => {
