@@ -59,7 +59,7 @@ JWT verifyToken is generated when login and when the user logs out, that token i
 * given marks endpoint verified with JWT verifyToken
 * single assignment endpoint has verified with verifyToken JWT
 
-### Live URL: https://online-group-study-be2ef.web.app/
+### Live URL: https://unequal-able.surge.sh
 
 
 
